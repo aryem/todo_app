@@ -68,6 +68,4 @@ const config = convict({
 
 config.validate({ allowed: 'strict' });
 
-console.log(config.getProperties());
-
 export default config;

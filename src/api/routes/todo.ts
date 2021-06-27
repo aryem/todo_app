@@ -10,14 +10,16 @@ const route = Router();
 const createTodoSchemaValidation = celebrate({
     body: Joi.object().keys({
         title: Joi.string().required().error(new Error("title is required and has to be text!")),
-        description: Joi.string()
+        description: Joi.string(),
+        isActive: Joi.boolean()
     })
 });
 const updateTodoSchemaValidation = celebrate({
     body: Joi.object().keys({
         id: Joi.number().required(),
         title: Joi.string().required().error(new Error("title is required and has to be text!")),
-        description: Joi.string()
+        description: Joi.string(),
+        isActive: Joi.boolean()
     })
 });
 
