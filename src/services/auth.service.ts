@@ -18,7 +18,7 @@ export class AuthService {
             this.logger.silly('Create db record');
             const user = await this.userModel.create({ username: username, password: hash });
             this.logger.silly('Generating JWT');
-            const token = this.generateAccessToken(user.username);
+            const token = this.generateAccessToken(user);
             return { username: user.username, token };
         } catch (error) {
             this.logger.error(error);
@@ -32,7 +32,7 @@ export class AuthService {
             // TODO: User not found
             const isPasswordValid = bcrypt.compareSync(password, user.password);
             // TODO: password not valid
-            const token = this.generateAccessToken(user.username);
+            const token = this.generateAccessToken(user);
             return { token };
         } catch (error) {
             this.logger.error(error);
@@ -42,8 +42,8 @@ export class AuthService {
 
     public async verifyToken(token: string) {
         try {
-            const username = jwt.verify(token, config.get('jwt.secret'));
-            const user = await this.userModel.findOne({ where: { username } });
+            const userToken = jwt.verify(token, config.get('jwt.secret'));
+            const user = await this.userModel.findByPk(userToken['id']);
             return user !== null;
         } catch (error) {
             this.logger.error(error);
@@ -51,8 +51,11 @@ export class AuthService {
 
     }
 
-    private generateAccessToken(username: string) {
-        return jwt.sign(username, config.get('jwt.secret'), { algorithm:  'RS256' });
+    private generateAccessToken(user: UserInstance) {
+        return jwt.sign({
+            id: user.id,
+            username: user.username
+        }, config.get('jwt.secret'));
     }
 }
 
