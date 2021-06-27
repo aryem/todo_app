@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+    postgres:
+        container_name: postgres
+        hostname: postgres
+        image: postgres
+        ports:
+            - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+        environment:
+            - POSTGRES_PASSWORD
+            - POSTGRES_USER
+            - POSTGRES_DB
+        volumes:
+            - ./postgresdata:/var/lib/postgresql/data
+            - ./src/migrations/dbinit.sql:/docker-entrypoint-initdb.d/dbinit.sql
+        restart: always
+    pgadmin:
+        container_name: pgadmin
+        image: dpage/pgadmin4
+        restart: always
+        environment:
+            - PGADMIN_DEFAULT_EMAIL
+            - PGADMIN_DEFAULT_PASSWORD
+            - PGADMIN_LISTEN_PORT
+        ports:
+            - "${PGADMIN_PUBLIC_PORT}:${PGADMIN_LISTEN_PORT}"
+        volumes:
+            - pgadmin-data:/var/lib/pgadmin
+        depends_on:
+            - postgres
+    app:
+        container_name: todo_app
+        build:
+            context: .
+            dockerfile: .Dockerfile
+        depends_on:
+            - postgres
+        environment:
+            DATABASE_URL: postgres://postgres:postgres@postgres:5432/todo_db
+            NODE_ENV: development
+            PORT: ${TODO_APP_PORT}
+        ports:
+            - "${TODO_APP_PORT}:${TODO_APP_PORT}"
+volumes:
+    db-data:
+    pgadmin-data:
