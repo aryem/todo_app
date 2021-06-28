@@ -39,6 +39,7 @@ export default class TodoService {
                 isActive: todoUpdate.isActive,
                 description: todoUpdate.description
             }, { where: { id } });
+            return id;
         } catch (error) {
             this.logger.error(error);
         }
@@ -47,7 +48,9 @@ export default class TodoService {
         try {
             const rows = await this.todoModel.destroy({ where: { id } });
             if (!rows) {
-                throw new Error("No Todo object delete");
+                throw new Error("Todo Not found");
+            } else {
+                return id;
             }
         } catch (error) {
             this.logger.error(error);

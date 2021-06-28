@@ -16,10 +16,16 @@ export class AuthService {
             this.logger.silly('Hashing password');
             const hash = await bcrypt.hash(password, this._salyRounds);
             this.logger.silly('Create db record');
-            const user = await this.userModel.create({ username: username, password: hash });
-            this.logger.silly('Generating JWT');
-            const token = this.generateAccessToken(user);
-            return { username: user.username, token };
+            const user = await this.userModel.findOne({ where: { username } });
+            if (user) {
+                this.logger.error('username already exist %s', username);
+                throw new Error("Username already exits");
+            } else {
+                const newUser = await this.userModel.create({ username: username, password: hash });
+                this.logger.silly('Generating JWT');
+                const token = this.generateAccessToken(newUser);
+                return { username: newUser.username, token };
+            }
         } catch (error) {
             this.logger.error(error);
             throw error;
@@ -29,9 +35,13 @@ export class AuthService {
     public async login({ username, password }: UserCreationAttributes) {
         try {
             const user = await this.userModel.findOne({ where: { username } });
-            // TODO: User not found
+            if (!user) {
+                throw new Error('User not found');
+            }
             const isPasswordValid = bcrypt.compareSync(password, user.password);
-            // TODO: password not valid
+            if (!isPasswordValid) {
+                throw new Error('Password is invalid');
+            }
             const token = this.generateAccessToken(user);
             return { token };
         } catch (error) {
